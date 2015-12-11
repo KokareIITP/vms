@@ -334,7 +334,7 @@ def get_shifts_with_open_slots_for_volunteer(j_id, v_id):
 
     for shift in shift_list_by_date:
         slots_remaining = get_shift_slots_remaining(shift.id)
-        if slots_remaining > 0 and not is_signed_up(v_id, shift.id):
+        if slots_remaining > 0 and not is_signed_up(v_id, shift.id) and shift.date >= (datetime.date.today() + datetime.timedelta(days=1)):
             shift_map = {}
             shift_map["id"] = shift.id
             shift_map["date"] = shift.date
@@ -467,3 +467,8 @@ def register(v_id, s_id):
         result = ERROR_CODE_ALREADY_SIGNED_UP
 
     return result
+
+
+
+
+
