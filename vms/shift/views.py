@@ -10,7 +10,7 @@ from shift.models import Shift
 from shift.services import *
 from volunteer.forms import SearchVolunteerForm
 from volunteer.services import get_all_volunteers, search_volunteers
-
+from django.contrib import messages
 
 @login_required
 def add_hours(request, shift_id, volunteer_id):
@@ -223,10 +223,22 @@ def create(request, job_id):
                 if job:
                     form = ShiftForm(request.POST)
                     if form.is_valid():
-                        shift = form.save(commit=False)
-                        shift.job = job
-                        shift.save()
-                        return HttpResponseRedirect(reverse('shift:list_shifts', args=(job_id,)))
+                        start_date_job=job.start_date
+                        end_date_job=job.end_date
+                        shift_date=form.cleaned_data['date']
+                        if( shift_date >= start_date_job and shift_date <= end_date_job ):
+                            shift = form.save(commit=False)
+                            shift.job = job
+                            shift.save()
+                            return HttpResponseRedirect(reverse('shift:list_shifts', args=(job_id,)))
+                        else:
+                            messages.add_message(request, messages.INFO, 'Shift date should lie within Job dates')
+                            return render(
+                            request,
+                            'shift/create.html',
+                            {'form': form, 'job_id': job_id, 'job': job }
+                            )
+
                     else:
                         return render(
                             request,
