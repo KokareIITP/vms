@@ -7,6 +7,9 @@ from django.http import Http404, HttpResponse, HttpResponseRedirect
 from django.shortcuts import render
 
 from shift.services import *
+from event.services import *
+from job.services import *
+from django.core import serializers
 
 
 @login_required
@@ -22,6 +25,8 @@ def report(request):
         return render(request, 'vms/no_admin_rights.html')
         
     organization_list = get_organizations_ordered_by_name()
+    event_list = get_events_ordered_by_name()
+    job_list =  get_jobs_ordered_by_title()
     
     if request.method == 'POST':
         form = ReportForm(request.POST)
@@ -43,12 +48,12 @@ def report(request):
                 end_date
                 )
             total_hours = calculate_total_report_hours(report_list)
-            return render(request, 'administrator/report.html', {'form': form, 'report_list': report_list, 'total_hours': total_hours, 'notification': True, 'organization_list': organization_list, 'selected_organization': organization})
+            return render(request, 'administrator/report.html', {'form': form, 'report_list': report_list, 'total_hours': total_hours, 'notification': True, 'organization_list': organization_list, 'event_list': event_list, 'job_list' : job_list 'selected_organization': organization})
         else:
-            return render(request, 'administrator/report.html', {'form': form, 'notification': False, 'organization_list': organization_list})
+            return render(request, 'administrator/report.html', {'form': form, 'notification': False, 'organization_list': organization_list, 'event_list': event_list, 'job_list' : job_list })
     else:
         form = ReportForm()
-        return render(request, 'administrator/report.html', {'form': form, 'notification': False, 'organization_list': organization_list})
+        return render(request, 'administrator/report.html', {'form': form, 'notification': False, 'organization_list': organization_list, 'event_list': event_list, 'job_list' : job_list})
 
 
 @login_required
@@ -64,3 +69,11 @@ def settings(request):
         return HttpResponse(status=403)
 
     return HttpResponseRedirect(reverse('event:list'))
+
+
+@login_required
+def all_jobs(request, event_id):
+    current_event = Event.objects.get()
+    jobs = Job.objects.all().filter(event=event)
+    json_jobs = serializers.serialize("json", jobs)
+    return HttpResponse(json_jobs, mimetype="application/javascript")
